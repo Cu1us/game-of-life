@@ -1,5 +1,3 @@
-//using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,6 +7,7 @@ public class GridManager : MonoBehaviour
     List<Vector2Int> tickedCellsThisIteration = new();
     Camera mainCamera;
 
+    #region Settings
     [Header("Settings (hover on each for info)")]
     [Space]
 
@@ -36,6 +35,7 @@ public class GridManager : MonoBehaviour
     [SerializeField]
     [Tooltip("How quickly the camera zooms in/out when you scroll the mouse wheel.")]
     float cameraZoomSpeed = 1;
+    #endregion
 
     float timeSinceLastTick = 0;
 
@@ -64,7 +64,7 @@ public class GridManager : MonoBehaviour
                 SpawnCellAtCursor();
             if (Input.GetMouseButton(1))
                 KillCellAtCursor();
-            MoveCameraTowardCursor();
+            CameraMovement();
 
             if (Input.mouseScrollDelta.y != 0 && gameSize >= 0.1f)
                 gameSize = Mathf.Max(gameSize + Input.mouseScrollDelta.y * cameraZoomSpeed, 0.1f);
@@ -114,6 +114,8 @@ public class GridManager : MonoBehaviour
                 gridToModify.Add(position, new Cell(position));
         }
     }
+
+
     int CountAdjacentAliveCells(Vector2Int center)
     {
         int aliveCellsNearby = 0;
@@ -124,7 +126,6 @@ public class GridManager : MonoBehaviour
         }
         return aliveCellsNearby;
     }
-
     IEnumerable<Vector2Int> GetAdjacentCoordinates(Vector2Int center, bool includeCenter = false)
     {
         for (int i = -1; i <= 1; i++)
@@ -137,7 +138,6 @@ public class GridManager : MonoBehaviour
         }
     }
 
-    [ContextMenu("Draw all cells")]
     public void DrawAllCells()
     {
         foreach (KeyValuePair<Vector2Int, Cell> gridEntry in Grid)
@@ -149,7 +149,7 @@ public class GridManager : MonoBehaviour
     [ContextMenu("Spawn random cells")]
     void SpawnRandomCells()
     {
-        for (int i = 0; i < 30; i++)
+        for (int i = 0; i < 50; i++)
         {
             Vector2Int cellPos = new(Random.Range(-10, 10), Random.Range(-10, 10));
             if (!Grid.ContainsKey(cellPos))
@@ -186,26 +186,26 @@ public class GridManager : MonoBehaviour
             Grid.Remove(cellPosition);
         }
     }
-    void MoveCameraTowardCursor()
+    void CameraMovement()
     {
         Vector2 mouseViewportPos = mainCamera.ScreenToViewportPoint(Input.mousePosition);
-        Vector2 moveDelta = Vector2.zero;
+        Vector2 moveDelta = new(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
 
         if (mouseViewportPos.x > 1 - screenBorderWidth / mainCamera.aspect && mouseViewportPos.x < 1)
         {
-            moveDelta.x = 1;
+            moveDelta.x += 1;
         }
         if (mouseViewportPos.x < screenBorderWidth / mainCamera.aspect && mouseViewportPos.x > 0)
         {
-            moveDelta.x = -1;
+            moveDelta.x -= 1;
         }
         if (mouseViewportPos.y > 1 - screenBorderWidth && mouseViewportPos.y < 1)
         {
-            moveDelta.y = 1;
+            moveDelta.y += 1;
         }
         if (mouseViewportPos.y < screenBorderWidth && mouseViewportPos.y > 0)
         {
-            moveDelta.y = -1;
+            moveDelta.y -= 1;
         }
 
         if (moveDelta != Vector2.zero)
@@ -215,6 +215,7 @@ public class GridManager : MonoBehaviour
         }
     }
 }
+
 
 public class Cell
 {
